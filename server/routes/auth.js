@@ -1,3 +1,4 @@
+const LoginActivity = require("../models/LoginActivity");
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const User = require("../models/user");
@@ -60,10 +61,21 @@ router.post("/login", async (req, res) => {
       { expiresIn: "1h" }
     );
 
-    res.json({
-      message: "Login successful",
-      token,
-    });
+    // Capture login activity
+const loginActivity = new LoginActivity({
+  userId: user._id,
+  email: user.email,
+  ipAddress: req.ip,
+  userAgent: req.headers["user-agent"],
+});
+
+await loginActivity.save();
+
+res.json({
+  message: "Login successful",
+  token,
+});
+
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
