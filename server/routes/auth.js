@@ -69,4 +69,15 @@ router.post("/login", async (req, res) => {
   }
 });
 
+const authMiddleware = require("../middleware/authMiddleware");
+
+// PROTECTED ROUTE (TEST)
+router.get("/dashboard", authMiddleware, (req, res) => {
+  res.json({
+    message: "Welcome to your dashboard",
+    userId: req.userId,
+  });
+});
+
+
 module.exports = router;
