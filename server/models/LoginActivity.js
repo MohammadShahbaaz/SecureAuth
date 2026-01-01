@@ -22,6 +22,16 @@ const LoginActivitySchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+     // 🔥 NEW FIELDS
+    riskScore: {
+      type: Number,
+      default: 0,
+    },
+    riskLevel: {
+      type: String,
+      enum: ["LOW", "MEDIUM", "HIGH"],
+      default: "LOW",
+    },
   },
   { timestamps: true }
 );

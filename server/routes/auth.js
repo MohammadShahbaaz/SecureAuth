@@ -36,6 +36,56 @@ router.post("/register", async (req, res) => {
   }
 });
 
+const calculateRiskScore = async (userId, ip, userAgent) => {
+  let score = 0;
+
+  // 1️⃣ Check if IP is new
+  const previousIp = await LoginActivity.findOne({
+    userId,
+    ipAddress: ip,
+  });
+
+  if (!previousIp) {
+    score += 30;
+  }
+
+  // 2️⃣ Check if device is new
+  const previousDevice = await LoginActivity.findOne({
+    userId,
+    userAgent,
+  });
+
+  if (!previousDevice) {
+    score += 30;
+  }
+
+  // 3️⃣ Check rapid login attempts (last 10 minutes)
+  const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+
+  const recentLogins = await LoginActivity.countDocuments({
+    userId,
+    loginTime: { $gte: tenMinutesAgo },
+  });
+
+  if (recentLogins >= 3) {
+    score += 20;
+  }
+
+  // 4️⃣ Late night login (optional but realistic)
+  const hour = new Date().getHours();
+  if (hour >= 0 && hour <= 5) {
+    score += 20;
+  }
+
+  // Determine risk level
+  let riskLevel = "LOW";
+  if (score >= 60) riskLevel = "HIGH";
+  else if (score >= 30) riskLevel = "MEDIUM";
+
+  return { score, riskLevel };
+};
+
+
 // LOGIN USER
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
@@ -61,20 +111,33 @@ router.post("/login", async (req, res) => {
       { expiresIn: "1h" }
     );
 
+    const { score, riskLevel } = await calculateRiskScore(
+  user._id,
+  req.ip,
+  req.headers["user-agent"]
+);
+
+
     // Capture login activity
 const loginActivity = new LoginActivity({
   userId: user._id,
   email: user.email,
   ipAddress: req.ip,
   userAgent: req.headers["user-agent"],
+  riskScore: score,
+  riskLevel,
 });
 
 await loginActivity.save();
 
+
 res.json({
   message: "Login successful",
   token,
+  riskScore: score,
+  riskLevel,
 });
+
 
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -90,6 +153,23 @@ router.get("/dashboard", authMiddleware, (req, res) => {
     userId: req.userId,
   });
 });
+
+// VIEW LOGIN HISTORY (PROTECTED)
+router.get("/login-history", authMiddleware, async (req, res) => {
+  try {
+    const history = await LoginActivity.find({ userId: req.userId })
+      .sort({ loginTime: -1 })
+      .limit(10);
+
+    res.json({
+      count: history.length,
+      history,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch login history" });
+  }
+});
+
 
 
 module.exports = router;
