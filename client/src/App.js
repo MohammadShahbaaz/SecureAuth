@@ -1,23 +1,57 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from "react";
+import Dashboard from "./components/Dashboard";
 
 function App() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [token, setToken] = useState("");
+  const [error, setError] = useState("");
+
+  const login = async () => {
+    setError("");
+
+    const res = await fetch("http://localhost:5000/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setError(data.message || "Login failed");
+      return;
+    }
+
+    setToken(data.token);
+  };
+
+  if (token) {
+    return <Dashboard token={token} />;
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ padding: "40px" }}>
+      <h1>SecureAuth Login</h1>
+
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      <input
+        placeholder="Email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <br /><br />
+
+      <input
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <br /><br />
+
+      <button onClick={login}>Login</button>
     </div>
   );
 }
