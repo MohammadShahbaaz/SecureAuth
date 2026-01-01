@@ -1,3 +1,5 @@
+import "./Dashboard.css";
+
 import {
   PieChart,
   Pie,
@@ -49,68 +51,75 @@ function Dashboard({ token }) {
 
 const COLORS = ["#22c55e", "#facc15", "#ef4444"];
 
+
   return (
-    <div style={{ padding: "30px" }}>
+    <div className="dashboard">
       <h2>🔐 Login Activity Dashboard</h2>
 
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-      <h3 style={{ marginTop: "30px" }}>⚠️ Login Risk Distribution</h3>
+      <div className="card">
+  <h3>⚠️ Login Risk Distribution</h3>
 
-<PieChart width={400} height={300}>
-  <Pie
-    data={riskData}
-    cx="50%"
-    cy="50%"
-    outerRadius={100}
-    dataKey="value"
-    label
-  >
-    {riskData.map((entry, index) => (
-      <Cell key={`cell-${index}`} fill={COLORS[index]} />
-    ))}
-  </Pie>
-  <Tooltip />
-  <Legend />
-</PieChart>
+  <PieChart width={400} height={300}>
+    <Pie
+      data={riskData}
+      cx="50%"
+      cy="50%"
+      outerRadius={100}
+      dataKey="value"
+      label
+    >
+      {riskData.map((entry, index) => (
+        <Cell key={`cell-${index}`} fill={COLORS[index]} />
+      ))}
+    </Pie>
+    <Tooltip />
+    <Legend />
+  </PieChart>
+</div>
 
 
-      <table border="1" cellPadding="8" style={{ marginTop: "20px" }}>
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>IP Address</th>
-            <th>Device</th>
-            <th>Risk Score</th>
-            <th>Risk Level</th>
-          </tr>
-        </thead>
-        <tbody>
-          {history.map((item) => (
-            <tr key={item._id}>
-              <td>{new Date(item.loginTime).toLocaleString()}</td>
-              <td>{item.ipAddress}</td>
-              <td>{item.userAgent?.slice(0, 30)}...</td>
-              <td>{item.riskScore}</td>
-              <td
-                style={{
-                  color:
-                    item.riskLevel === "HIGH"
-                      ? "red"
-                      : item.riskLevel === "MEDIUM"
-                      ? "orange"
-                      : "green",
-                }}
-              >
-                {item.riskLevel}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+
+      <div className="card">
+  <h3>🧾 Login History</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>IP Address</th>
+        <th>Device</th>
+        <th>Risk Score</th>
+        <th>Risk Level</th>
+      </tr>
+    </thead>
+    <tbody>
+      {history.map((item) => (
+        <tr key={item._id}>
+          <td>{new Date(item.loginTime).toLocaleString()}</td>
+          <td>{item.ipAddress}</td>
+          <td>{item.userAgent?.slice(0, 30)}...</td>
+          <td>{item.riskScore}</td>
+          <td
+            className={
+              item.riskLevel === "HIGH"
+                ? "risk-high"
+                : item.riskLevel === "MEDIUM"
+                ? "risk-medium"
+                : "risk-low"
+            }
+          >
+            {item.riskLevel}
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
     </div>
   );
 }
-
 
 export default Dashboard;
